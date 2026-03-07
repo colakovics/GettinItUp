@@ -20,30 +20,41 @@ class AGettinItUpCharacter : public ACharacter
 	
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UCapsuleComponent* LeftAxe;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UCapsuleComponent* RightAxe;
 	
 	UPROPERTY()
 	bool bIsLeftAxeGripping = false;
+	
+	UPROPERTY()
 	bool bIsRightAxeGripping = false;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveLeftAxeAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveRightAxeAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	float MaxAxeSpeed = 50.f;
+
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
+	
+	FVector2D LeftAxeAcceleration;
+	
+	FVector2D RightAxeAcceleration;
 	
 	void MoveLeftAxe(const FInputActionValue& Value);
 	
 	void MoveRightAxe(const FInputActionValue& Value);
 	
-	void MoveAxeInternal(const FInputActionValue& Value, UCapsuleComponent* TargetAxe);
-	
+	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe);
+
 #pragma endregion Climbing
 	
 #pragma region Generated

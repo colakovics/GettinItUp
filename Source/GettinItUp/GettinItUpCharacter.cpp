@@ -80,47 +80,96 @@ void AGettinItUpCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		
 		// Old:
 		
-		//Jumping
-		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		// Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		//Moving
-		// EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::Move);
+		// Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::Move);
 
-		//Looking
-		// EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::Look);
+		// Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::Look);
+	}
+}
+
+void AGettinItUpCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (LeftAxe)
+	{
+		ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe);
+	}
+	if (RightAxe)
+	{
+		ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe);
 	}
 }
 
 void AGettinItUpCharacter::MoveLeftAxe(const FInputActionValue& Value)
 {
-	MoveAxeInternal(Value, LeftAxe);
+	// input is a Vector2D
+	FVector2D MovementVector = Value.Get<FVector2D>();
+	if (MovementVector.Length() > 1)
+	{
+		MovementVector /= MovementVector.Length();
+	}
+
+	LeftAxeAcceleration = MovementVector;
 }
 
 void AGettinItUpCharacter::MoveRightAxe(const FInputActionValue& Value)
 {
-	MoveAxeInternal(Value, RightAxe);
-}
-
-void AGettinItUpCharacter::MoveAxeInternal(const FInputActionValue& Value, UCapsuleComponent* TargetAxe)
-{
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
+	if (MovementVector.Length() > 1)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		
-		
+		MovementVector /= MovementVector.Length();
 	}
+
+	RightAxeAcceleration = MovementVector;
+}
+
+void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe)
+{
+	const float AnalogInputModifier = (AxeAccelerationInput.SizeSquared() > 0.f ? AxeAccelerationInput.Size() : 0.f);
+	const float AdjustedMaxAxeSpeed = MaxAxeSpeed * AnalogInputModifier;
+	const bool bExceedingMaxSpeed = Axe->GetPhysicsLinearVelocity().Length() > AdjustedMaxAxeSpeed;
+	auto Velocity = Axe->GetPhysicsLinearVelocity();
+	
+	if (AnalogInputModifier > 0.f && !bExceedingMaxSpeed)
+	{
+		// Apply change in velocity direction
+		if (Velocity.SizeSquared() > 0.f)
+		{
+			// Change direction faster than only using acceleration, but never increase velocity magnitude.
+			const float TimeScale = FMath::Clamp(DeltaTime, 0.f, 1.f);
+			Velocity += (FVector(AxeAccelerationInput.X, AxeAccelerationInput.Y, 0.f) * Velocity.Size() - Velocity) * TimeScale;
+		}
+	}
+	else
+	{
+		// Dampen velocity magnitude based on deceleration.
+		if (Velocity.SizeSquared() > 0.f)
+		{
+			const FVector OldVelocity = Velocity;
+			const float VelSize = FMath::Max(Velocity.Size() -  DeltaTime, 0.f);
+			Velocity = Velocity.GetSafeNormal() * VelSize;
+
+			// Don't allow braking to lower us below max speed if we started above it.
+			if (bExceedingMaxSpeed && Velocity.SizeSquared() < FMath::Square(AdjustedMaxAxeSpeed))
+			{
+				Velocity = OldVelocity.GetSafeNormal() * AdjustedMaxAxeSpeed;
+			}
+		}
+	}
+
+	// Apply acceleration and clamp velocity magnitude.
+	const float NewMaxSpeed = Velocity.Length() > AdjustedMaxAxeSpeed ? Velocity.Size() : AdjustedMaxAxeSpeed;
+	Velocity += FVector(AxeAccelerationInput.X, AxeAccelerationInput.Y, 0.f) * DeltaTime;
+	Velocity = Velocity.GetClampedToMaxSize(NewMaxSpeed);
+	
+	AxeAccelerationInput.Set(0, 0);
 }
 
 void AGettinItUpCharacter::Move(const FInputActionValue& Value)
