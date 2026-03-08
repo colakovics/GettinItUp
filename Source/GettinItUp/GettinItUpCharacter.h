@@ -32,10 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	FName RightAxeComponentTagName;
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsLeftAxeGripping = false;
 	
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsRightAxeGripping = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
@@ -58,6 +58,12 @@ protected:
 	void MoveLeftAxe(const FInputActionValue& Value);
 	
 	void MoveRightAxe(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable)
+	void CeaseRightAxeMovement();
+
+	UFUNCTION(BlueprintCallable)
+	void CeaseLeftAxeMovement();
 	
 	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe);
 

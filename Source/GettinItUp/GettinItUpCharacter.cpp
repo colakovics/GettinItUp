@@ -100,7 +100,7 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	if (LeftAxe)
+	if (LeftAxe && !bIsLeftAxeGripping)
 	{
 		ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
 	}
@@ -132,6 +132,21 @@ void AGettinItUpCharacter::MoveRightAxe(const FInputActionValue& Value)
 	}
 
 	RightAxeAcceleration = MovementVector;
+}
+
+void AGettinItUpCharacter::CeaseRightAxeMovement()
+{
+	auto KillVector = FVector(0.f, 0.f, 0.f);
+	RightAxe->SetPhysicsLinearVelocity(KillVector);
+}
+
+void AGettinItUpCharacter::CeaseLeftAxeMovement()
+{
+	auto KillVector = FVector(0.f, 0.f, 0.f);
+	LeftAxe->SetPhysicsLinearVelocity(KillVector);
+	LeftAxe->SetAllPhysicsAngularVelocityInDegrees(KillVector);
+	bIsLeftAxeGripping = true;
+	LeftAxe->SetEnableGravity(false);
 }
 
 void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe)
