@@ -202,7 +202,7 @@ void AGettinItUpCharacter::LerpCameraToAxesMidpoint()
 bool AGettinItUpCharacter::IsInFloorTriggerBox()
 {
 	// Unimplemented
-	return false;
+	return true;
 }
 
 void AGettinItUpCharacter::Move(const FInputActionValue& Value)
