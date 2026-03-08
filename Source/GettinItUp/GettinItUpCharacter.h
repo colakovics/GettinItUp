@@ -70,6 +70,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	float PhysicsCullDistance = 40.f;
+
+	void ShowWinScreen();
 	
 	virtual void Tick(float DeltaSeconds) override;
 

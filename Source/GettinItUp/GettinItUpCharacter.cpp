@@ -9,6 +9,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/TextRenderComponent.h"
+#include "Engine/TextRenderActor.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -105,45 +107,74 @@ void AGettinItUpCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 	}
 }
 
+void AGettinItUpCharacter::ShowWinScreen()
+{
+	auto WinText = NewObject<ATextRenderActor>();
+	WinText->GetTextRender()->SetText(FText::FromString("Congrats! You GOT IT UP! :D"));
+	WinText->SetActorTransform(GetCapsuleComponent()->GetComponentTransform());
+	
+	GetLocalViewingPlayerController()->SetPause(true);
+}
+
 void AGettinItUpCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	if (LeftAxe)
+	TArray<AActor*> WholeCharacterOverlaps;
+	GetCapsuleComponent()->GetOverlappingActors(WholeCharacterOverlaps);
+	bool bHasTaggedAirOverlapper = WholeCharacterOverlaps.ContainsByPredicate(
+		[](AActor* Actor)
+		{
+			return Actor->ActorHasTag("air");
+		});
+	
+	if (!bHasTaggedAirOverlapper)
 	{
-		TArray<AActor*> LeftOverlaps;
-		LeftAxeOverlapTester->GetOverlappingActors(LeftOverlaps);
-		bool bHasTaggedOverlapper = LeftOverlaps.ContainsByPredicate(
-			[](AActor* Actor)
+		if (LeftAxe)
+		{
+			TArray<AActor*> LeftOverlaps;
+			LeftAxeOverlapTester->GetOverlappingActors(LeftOverlaps);
+			bool bHasTaggedOverlapper = LeftOverlaps.ContainsByPredicate(
+				[](AActor* Actor)
+				{
+					return Actor->ActorHasTag("whall");
+				});
+			if (bIsLeftAxeGripping && bHasTaggedOverlapper)
 			{
-				return Actor->ActorHasTag("whall");
-			});
-		if (bIsLeftAxeGripping && bHasTaggedOverlapper)
-		{
-			CeaseLeftAxeMovement();
+				CeaseLeftAxeMovement();
+			}
+			else
+			{
+				ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
+			}
 		}
-		else
+		if (RightAxe)
 		{
-			ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
+			TArray<AActor*> RightOverlaps;
+			RightAxeOverlapTester->GetOverlappingActors(RightOverlaps);
+			bool bHasTaggedOverlapper = RightOverlaps.ContainsByPredicate(
+				[](AActor* Actor)
+				{
+					return Actor->ActorHasTag("whall");
+				});
+			if (bIsRightAxeGripping && bHasTaggedOverlapper)
+			{
+				CeaseRightAxeMovement();
+			}
+			else
+			{
+				ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
+			}
 		}
 	}
-	if (RightAxe)
+	bool bHasTaggedVictoryOverlapper = WholeCharacterOverlaps.ContainsByPredicate(
+		[](AActor* Actor)
+		{
+			return Actor->ActorHasTag("victory");
+		});
+	if (bHasTaggedVictoryOverlapper)
 	{
-		TArray<AActor*> RightOverlaps;
-		RightAxeOverlapTester->GetOverlappingActors(RightOverlaps);
-		bool bHasTaggedOverlapper = RightOverlaps.ContainsByPredicate(
-			[](AActor* Actor)
-			{
-				return Actor->ActorHasTag("whall");
-			});
-		if (bIsRightAxeGripping && bHasTaggedOverlapper)
-		{
-			CeaseRightAxeMovement();
-		}
-		else
-		{
-			ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
-		}
+		ShowWinScreen();
 	}
 	
 	LerpCameraToAxesMidpoint();
