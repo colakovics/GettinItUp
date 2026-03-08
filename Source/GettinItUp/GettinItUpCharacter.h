@@ -60,6 +60,8 @@ protected:
 	void MoveRightAxe(const FInputActionValue& Value);
 	
 	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe);
+	
+	void LerpCameraToAxesMidpoint();
 
 #pragma endregion Climbing
 	

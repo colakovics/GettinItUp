@@ -68,6 +68,9 @@ void AGettinItUpCharacter::BeginPlay()
 	
 	LeftAxe = GetComponentsByTag(UCapsuleComponent::StaticClass(), LeftAxeComponentTagName)[0];
 	RightAxe = GetComponentsByTag(UCapsuleComponent::StaticClass(), RightAxeComponentTagName)[0];
+	
+	auto* CharMoveComp = GetCharacterMovement();
+	CharMoveComp->SetMovementMode(MOVE_Flying);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -108,6 +111,8 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 	{
 		ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
 	}
+	
+	LerpCameraToAxesMidpoint();
 }
 
 void AGettinItUpCharacter::MoveLeftAxe(const FInputActionValue& Value)
@@ -136,56 +141,26 @@ void AGettinItUpCharacter::MoveRightAxe(const FInputActionValue& Value)
 
 void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe)
 {
-	// const float AnalogInputModifier = (AxeAccelerationInput.SizeSquared() > 0.f ? AxeAccelerationInput.Size() : 0.f);
-	// const float AdjustedMaxAxeSpeed = MaxAxeSpeed * AnalogInputModifier;
-	// const bool bExceedingMaxSpeed = Axe->GetPhysicsLinearVelocity().Length() > AdjustedMaxAxeSpeed;
-	// auto Velocity = Axe->GetPhysicsLinearVelocity();
-	//
-	// if (AnalogInputModifier > 0.f && !bExceedingMaxSpeed)
-	// {
-	// 	// Apply change in velocity direction
-	// 	if (Velocity.SizeSquared() > 0.f)
-	// 	{
-	// 		// Change direction faster than only using acceleration, but never increase velocity magnitude.
-	// 		const float TimeScale = FMath::Clamp(DeltaTime, 0.f, 1.f);
-	// 		Axe->SetPhysicsLinearVelocity(Velocity + (FVector(AxeAccelerationInput.X, AxeAccelerationInput.Y, 0.f) * Velocity.Size() - Velocity) * TimeScale);
-	// 		Velocity = Axe->GetPhysicsLinearVelocity();
-	// 	}
-	// }
-	// else
-	// {
-	// 	// Dampen velocity magnitude based on deceleration.
-	// 	if (Velocity.SizeSquared() > 0.f)
-	// 	{
-	// 		const FVector OldVelocity = Velocity;
-	// 		const float VelSize = FMath::Max(Velocity.Size() -  DeltaTime, 0.f);
-	// 		Axe->SetPhysicsLinearVelocity(Velocity.GetSafeNormal() * VelSize);
-	// 		Velocity = Axe->GetPhysicsLinearVelocity();
-	//
-	// 		// Don't allow braking to lower us below max speed if we started above it.
-	// 		if (bExceedingMaxSpeed && Velocity.SizeSquared() < FMath::Square(AdjustedMaxAxeSpeed))
-	// 		{
-	// 			Axe->SetPhysicsLinearVelocity(OldVelocity.GetSafeNormal() * AdjustedMaxAxeSpeed);
-	// 			Velocity = Axe->GetPhysicsLinearVelocity();		
-	// 		}
-	// 	}
-	// }
-	//
-	// // Apply acceleration and clamp velocity magnitude.
-	// const float NewMaxSpeed = Velocity.Length() > AdjustedMaxAxeSpeed ? Velocity.Size() : AdjustedMaxAxeSpeed;
-	// Axe->SetPhysicsLinearVelocity(Velocity + FVector(AxeAccelerationInput.X, AxeAccelerationInput.Y, 0.f) * DeltaTime);
-	// Velocity = Axe->GetPhysicsLinearVelocity();
-	// Axe->SetPhysicsLinearVelocity(Velocity.GetClampedToMaxSize(NewMaxSpeed));
-	// Velocity = Axe->GetPhysicsLinearVelocity();
 	
 	// Adjust input directions to world direction.
 	auto MappedVector = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
-	// auto Transform = Axe->GetComponentTransform();
-	// auto WorldRotator = UKismetMathLibrary::TransformRotation(Transform, Transform.Rotator());
-	// auto CorrectedVector = UKismetMathLibrary::Quat_UnrotateVector(WorldRotator.Quaternion(), MappedVector);
 	Axe->AddForce(MappedVector);
 	
 	AxeAccelerationInput.Set(0, 0);
+}
+
+void AGettinItUpCharacter::LerpCameraToAxesMidpoint()
+{
+	auto* CharMoveComp = GetCharacterMovement();
+
+	auto Diff = LeftAxe->GetComponentTransform().GetLocation() - RightAxe->GetComponentTransform().GetLocation();
+	Diff /= 2;
+	auto Midpoint = RightAxe->GetComponentTransform().GetLocation() + Diff;
+
+	auto CharLocation = GetCapsuleComponent()->GetComponentTransform().GetLocation();
+	auto TargetVector = Midpoint - CharLocation;
+
+	GetCapsuleComponent()->AddForce(TargetVector * TargetVector.SquaredLength());
 }
 
 void AGettinItUpCharacter::Move(const FInputActionValue& Value)
