@@ -21,10 +21,16 @@ class AGettinItUpCharacter : public ACharacter
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
-	UCapsuleComponent* LeftAxe;
+	TSoftObjectPtr<UCapsuleComponent> LeftAxe;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	FName LeftAxeComponentTagName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
-	UCapsuleComponent* RightAxe;
+	TSoftObjectPtr<UCapsuleComponent> RightAxe;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	FName RightAxeComponentTagName;
 	
 	UPROPERTY()
 	bool bIsLeftAxeGripping = false;
