@@ -38,11 +38,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsRightAxeGripping = false;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bDisableMovement = false;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveLeftAxeAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveRightAxeAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FreezeLeftAxeAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FreezeRightAxeAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	float MaxAxeSpeed = 50.f;
@@ -120,6 +129,9 @@ protected:
 			
 
 protected:
+
+	void FreezeRightAxe(const FInputActionValue& InputActionValue);
+	void FreezeLeftAxe(const FInputActionValue& InputActionValue);
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	

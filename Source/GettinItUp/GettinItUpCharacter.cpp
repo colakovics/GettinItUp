@@ -85,6 +85,10 @@ void AGettinItUpCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		EnhancedInputComponent->BindAction(MoveLeftAxeAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::MoveLeftAxe);
 		EnhancedInputComponent->BindAction(MoveRightAxeAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::MoveRightAxe);
 		
+		//Stopping axes
+		EnhancedInputComponent->BindAction(FreezeLeftAxeAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::FreezeLeftAxe);
+		EnhancedInputComponent->BindAction(FreezeRightAxeAction, ETriggerEvent::Triggered, this, &AGettinItUpCharacter::FreezeRightAxe);
+		
 		// // Old:
 		//
 		// // Jumping
@@ -103,15 +107,27 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	bIsAscensionAllowed = bIsLeftAxeGripping || bIsRightAxeGripping || IsInFloorTriggerBox();
-	
 	if (LeftAxe)
 	{
-		ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
+		if (!bIsLeftAxeGripping)
+		{
+			ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
+		}
+		else
+		{
+			CeaseLeftAxeMovement();
+		}
 	}
 	if (RightAxe)
 	{
-		ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
+		if (!bIsRightAxeGripping)
+		{
+			ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
+		}
+		else
+		{
+			CeaseRightAxeMovement();
+		}
 	}
 	
 	LerpCameraToAxesMidpoint();
@@ -145,6 +161,8 @@ void AGettinItUpCharacter::CeaseRightAxeMovement()
 {
 	auto KillVector = FVector(0.f, 0.f, 0.f);
 	RightAxe->SetPhysicsLinearVelocity(KillVector);
+	RightAxe->SetAllPhysicsAngularVelocityInDegrees(KillVector);
+	RightAxe->SetEnableGravity(false);
 }
 
 void AGettinItUpCharacter::CeaseLeftAxeMovement()
@@ -152,7 +170,6 @@ void AGettinItUpCharacter::CeaseLeftAxeMovement()
 	auto KillVector = FVector(0.f, 0.f, 0.f);
 	LeftAxe->SetPhysicsLinearVelocity(KillVector);
 	LeftAxe->SetAllPhysicsAngularVelocityInDegrees(KillVector);
-	bIsLeftAxeGripping = true;
 	LeftAxe->SetEnableGravity(false);
 }
 
@@ -167,7 +184,7 @@ void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVect
 	if (Diff.Length() <= PhysicsCullDistance)
 	{
 		// Apply Input direction to axes
-		ResultForce = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
+		ResultForce = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * (MaxAxeSpeed + 5000.f));
 	}
 	else
 	{
@@ -175,12 +192,12 @@ void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVect
 	}
 	
 	// Only allow vertical movement if it is downwards or if ascension is allowed.
-	ResultForce.Z *= ResultForce.Z <= 0 || bIsAscensionAllowed;
+	// ResultForce.Z *= ResultForce.Z <= 0 || bIsAscensionAllowed;
 	
 	Axe->AddForce(ResultForce);
 	
 	// Enable gravity if we are not allowed to ascend
-	Axe->SetEnableGravity(!bIsAscensionAllowed);
+	// Axe->SetEnableGravity(!bIsAscensionAllowed);
 	
 	AxeAccelerationInput.Set(0, 0);
 }
@@ -238,6 +255,30 @@ void AGettinItUpCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AGettinItUpCharacter::FreezeRightAxe(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		bIsRightAxeGripping = true;
+	}
+	else
+	{
+		bIsRightAxeGripping = false;
+	}
+}
+
+void AGettinItUpCharacter::FreezeLeftAxe(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		bIsLeftAxeGripping = true;
+	}
+	else
+	{
+		bIsLeftAxeGripping = false;
 	}
 }
 
