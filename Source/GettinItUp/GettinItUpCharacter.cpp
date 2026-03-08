@@ -167,6 +167,11 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 			}
 		}
 	}
+	else
+	{
+		ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get(), true);
+				ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get(), true);
+	}
 	bool bHasTaggedVictoryOverlapper = WholeCharacterOverlaps.ContainsByPredicate(
 		[](AActor* Actor)
 		{
@@ -220,7 +225,7 @@ void AGettinItUpCharacter::CeaseLeftAxeMovement()
 	LeftAxe->SetEnableGravity(false);
 }
 
-void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe)
+void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe, bool bForceCull)
 {
 	// Check if axe is too far from core
 	auto CharLocation = GetCapsuleComponent()->GetComponentTransform().GetLocation();
@@ -228,7 +233,7 @@ void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVect
 	
 	FVector ResultForce;
 	
-	if (Diff.Length() <= PhysicsCullDistance)
+	if (Diff.Length() <= PhysicsCullDistance && !bForceCull)
 	{
 		// Apply Input direction to axes
 		ResultForce = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * (MaxAxeSpeed + 5000.f));

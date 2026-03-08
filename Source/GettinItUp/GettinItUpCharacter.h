@@ -69,7 +69,7 @@ public:
 	float MaxAxeSpeed = 50.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
-	float PhysicsCullDistance = 40.f;
+	float PhysicsCullDistance = 35.f;
 
 	void ShowWinScreen();
 	
@@ -91,7 +91,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void CeaseLeftAxeMovement();
 	
-	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe);
+	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe, bool bForceCull = false);
 	
 	void LerpCameraToAxesMidpoint();
 
