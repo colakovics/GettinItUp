@@ -103,6 +103,8 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
+	bIsAscensionAllowed = bIsLeftAxeGripping || bIsRightAxeGripping || IsInFloorTriggerBox();
+	
 	if (LeftAxe)
 	{
 		ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
@@ -145,16 +147,25 @@ void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVect
 	auto CharLocation = GetCapsuleComponent()->GetComponentTransform().GetLocation();
 	auto Diff = CharLocation - Axe->GetComponentTransform().GetLocation();
 	
+	FVector ResultForce;
+	
 	if (Diff.Length() <= PhysicsCullDistance)
 	{
 		// Apply Input direction to axes
-		auto MappedVector = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
-		Axe->AddForce(MappedVector);
+		ResultForce = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
 	}
 	else
 	{
-		Axe->AddForce(Diff * (Diff.SquaredLength() - FMath::Square(PhysicsCullDistance)));
+		ResultForce = Diff * (Diff.SquaredLength() - FMath::Square(PhysicsCullDistance));
 	}
+	
+	// Only allow vertical movement if it is downwards or if ascension is allowed.
+	ResultForce.Z *= ResultForce.Z <= 0 || bIsAscensionAllowed;
+	
+	Axe->AddForce(ResultForce);
+	
+	// Enable gravity if we are not allowed to ascend
+	Axe->SetEnableGravity(!bIsAscensionAllowed);
 	
 	AxeAccelerationInput.Set(0, 0);
 }
@@ -171,6 +182,12 @@ void AGettinItUpCharacter::LerpCameraToAxesMidpoint()
 	auto TargetVector = Midpoint - CharLocation;
 
 	GetCapsuleComponent()->AddForce(TargetVector * TargetVector.SquaredLength());
+}
+
+bool AGettinItUpCharacter::IsInFloorTriggerBox()
+{
+	// Unimplemented
+	return false;
 }
 
 void AGettinItUpCharacter::Move(const FInputActionValue& Value)
