@@ -31,6 +31,18 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	FName RightAxeComponentTagName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCapsuleComponent> LeftAxeOverlapTester;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	FName LeftAxeOverlapTesterTagName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	TSoftObjectPtr<UCapsuleComponent> RightAxeOverlapTester;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	FName RightAxeOverlapTesterTagName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsLeftAxeGripping = false;

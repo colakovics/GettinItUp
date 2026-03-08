@@ -68,6 +68,8 @@ void AGettinItUpCharacter::BeginPlay()
 	
 	LeftAxe = GetComponentsByTag(UCapsuleComponent::StaticClass(), LeftAxeComponentTagName)[0];
 	RightAxe = GetComponentsByTag(UCapsuleComponent::StaticClass(), RightAxeComponentTagName)[0];
+	LeftAxeOverlapTester = GetComponentsByTag(UCapsuleComponent::StaticClass(), LeftAxeOverlapTesterTagName)[0];
+	RightAxeOverlapTester = GetComponentsByTag(UCapsuleComponent::StaticClass(), RightAxeOverlapTesterTagName)[0];
 	
 	auto* CharMoveComp = GetCharacterMovement();
 	CharMoveComp->SetMovementMode(MOVE_Flying);
@@ -109,24 +111,38 @@ void AGettinItUpCharacter::Tick(float DeltaSeconds)
 	
 	if (LeftAxe)
 	{
-		if (!bIsLeftAxeGripping)
+		TArray<AActor*> LeftOverlaps;
+		LeftAxeOverlapTester->GetOverlappingActors(LeftOverlaps);
+		bool bHasTaggedOverlapper = LeftOverlaps.ContainsByPredicate(
+			[](AActor* Actor)
+			{
+				return Actor->ActorHasTag("whall");
+			});
+		if (bIsLeftAxeGripping && bHasTaggedOverlapper)
 		{
-			ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
+			CeaseLeftAxeMovement();
 		}
 		else
 		{
-			CeaseLeftAxeMovement();
+			ApplyControlInputToAxeVelocity(DeltaSeconds, LeftAxeAcceleration, LeftAxe.Get());
 		}
 	}
 	if (RightAxe)
 	{
-		if (!bIsRightAxeGripping)
+		TArray<AActor*> RightOverlaps;
+		RightAxeOverlapTester->GetOverlappingActors(RightOverlaps);
+		bool bHasTaggedOverlapper = RightOverlaps.ContainsByPredicate(
+			[](AActor* Actor)
+			{
+				return Actor->ActorHasTag("whall");
+			});
+		if (bIsRightAxeGripping && bHasTaggedOverlapper)
 		{
-			ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
+			CeaseRightAxeMovement();
 		}
 		else
 		{
-			CeaseRightAxeMovement();
+			ApplyControlInputToAxeVelocity(DeltaSeconds, RightAxeAcceleration, RightAxe.Get());
 		}
 	}
 	
