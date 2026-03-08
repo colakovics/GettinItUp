@@ -46,7 +46,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	float MaxAxeSpeed = 50.f;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	float PhysicsCullDistance = 40.f;
+	
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
@@ -66,6 +69,14 @@ protected:
 	void CeaseLeftAxeMovement();
 	
 	void ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe);
+	
+	void LerpCameraToAxesMidpoint();
+
+	bool IsInFloorTriggerBox();
+
+private:
+	
+	bool bIsAscensionAllowed = false;
 
 #pragma endregion Climbing
 	
