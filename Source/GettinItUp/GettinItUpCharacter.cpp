@@ -141,10 +141,20 @@ void AGettinItUpCharacter::MoveRightAxe(const FInputActionValue& Value)
 
 void AGettinItUpCharacter::ApplyControlInputToAxeVelocity(float DeltaTime, FVector2D& AxeAccelerationInput, UCapsuleComponent* Axe)
 {
+	// Check if axe is too far from core
+	auto CharLocation = GetCapsuleComponent()->GetComponentTransform().GetLocation();
+	auto Diff = CharLocation - Axe->GetComponentTransform().GetLocation();
 	
-	// Adjust input directions to world direction.
-	auto MappedVector = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
-	Axe->AddForce(MappedVector);
+	if (Diff.Length() <= PhysicsCullDistance)
+	{
+		// Apply Input direction to axes
+		auto MappedVector = FVector(0.f, AxeAccelerationInput.X * MaxAxeSpeed, AxeAccelerationInput.Y * MaxAxeSpeed);
+		Axe->AddForce(MappedVector);
+	}
+	else
+	{
+		Axe->AddForce(Diff * (Diff.SquaredLength() - FMath::Square(PhysicsCullDistance)));
+	}
 	
 	AxeAccelerationInput.Set(0, 0);
 }

@@ -46,6 +46,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
 	float MaxAxeSpeed = 50.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AxeGaming, meta = (AllowPrivateAccess = "true"))
+	float PhysicsCullDistance = 60.f;
 
 	virtual void Tick(float DeltaSeconds) override;
 
